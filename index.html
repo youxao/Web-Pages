@@ -211,6 +211,37 @@
   .send-btn:hover { opacity: .88; }
   .send-btn:disabled { opacity: .45; cursor: not-allowed; }
 
+  /* ---------- Bug 反馈弹窗 ---------- */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(0, 0, 0, .35);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay[hidden] { display: none; }
+  .modal {
+    width: 100%; max-width: 480px;
+    background: #fff; border-radius: 12px;
+    padding: 22px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, .18);
+  }
+  .modal h3 { font-size: 17px; margin-bottom: 8px; }
+  .modal-hint { font-size: 13px; color: var(--muted); margin-bottom: 12px; line-height: 1.5; }
+  .modal textarea {
+    width: 100%; border: 1px solid var(--border); border-radius: 8px;
+    font: inherit; font-size: 14px; padding: 10px 12px;
+    resize: vertical; min-height: 110px; outline: none;
+    box-sizing: border-box;
+  }
+  .modal textarea:focus { border-color: var(--red); box-shadow: 0 0 0 1px rgba(255, 75, 75, .25); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 14px; justify-content: flex-end; }
+  .modal-actions .st-btn { width: auto; padding: 8px 18px; }
+  .modal-send {
+    background: var(--red) !important; color: #fff !important;
+    border-color: var(--red) !important;
+  }
+  .modal-send:hover { opacity: .88; color: #fff !important; }
+
   footer {
     flex-shrink: 0;
     text-align: center;
@@ -280,10 +311,23 @@
   </section>
 </div>
 
+<!-- Bug 反馈弹窗 -->
+<div class="modal-overlay" id="bugModal" hidden>
+  <div class="modal">
+    <h3>🐞 反馈问题</h3>
+    <p class="modal-hint">请描述你遇到的问题，点击发送后会用你电脑上的默认邮件客户端发到我的邮箱。</p>
+    <textarea id="bugText" rows="5" placeholder="描述一下发生了什么…"></textarea>
+    <div class="modal-actions">
+      <button class="st-btn" id="bugCancel">取消</button>
+      <button class="st-btn modal-send" id="bugSend">📧 发送邮件</button>
+    </div>
+  </div>
+</div>
+
 <footer>
   AI智能伴侣 · Powered by <a href="https://platform.deepseek.com" target="_blank" rel="noopener">DeepSeek</a> ·
   <a href="https://bilibili.com" target="_blank" rel="noopener">Get Help</a> ·
-  <a href="https://tanghong.xin" target="_blank" rel="noopener">Report a Bug</a>
+  <a href="#" id="bugBtn" title="通过邮件反馈问题">Report a Bug</a>
 </footer>
 
 <script>
@@ -525,6 +569,38 @@
   });
   keyEl.addEventListener('input', function () {
     localStorage.setItem('companion_api_key', keyEl.value.trim());
+  });
+
+  /* ========== Bug 反馈（mailto 邮件） ========== */
+  var BUG_EMAIL = '991895176@qq.com';
+  var bugModal = $('bugModal');
+  var bugText = $('bugText');
+
+  $('bugBtn').addEventListener('click', function (e) {
+    e.preventDefault();
+    bugText.value = '';
+    bugModal.hidden = false;
+    bugText.focus();
+  });
+
+  $('bugCancel').addEventListener('click', function () {
+    bugModal.hidden = true;
+  });
+
+  bugModal.addEventListener('click', function (e) {
+    if (e.target === bugModal) bugModal.hidden = true; // 点遮罩关闭
+  });
+
+  $('bugSend').addEventListener('click', function () {
+    var desc = bugText.value.trim() || '（未填写描述）';
+    var subject = encodeURIComponent('AI智能伴侣 - Bug反馈');
+    var body = encodeURIComponent(
+      '你好，我在使用 AI智能伴侣 时遇到了一个问题：\n\n' +
+      '【问题描述】\n' + desc + '\n\n' +
+      '【环境信息】\n浏览器：' + navigator.userAgent + '\n时间：' + new Date().toLocaleString('zh-CN')
+    );
+    window.location.href = 'mailto:' + BUG_EMAIL + '?subject=' + subject + '&body=' + body;
+    bugModal.hidden = true;
   });
 
   /* ========== 初始化 ========== */
