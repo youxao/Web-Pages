@@ -5,17 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>AI智能伴侣</title>
 <link rel="stylesheet" href="css/style.css" />
+<!-- 主题引导：必须早于其他脚本，避免深色主题闪白 -->
+<script src="js/theme.js"></script>
 </head>
 <body>
 
-<header>
-  <span class="logo">🤖</span>
-  <h1>AI智能伴侣</h1>
-</header>
-
 <div class="main">
-  <!-- 侧边栏：伴侣信息 -->
+  <!-- 侧边栏：标题 + 伴侣信息 -->
   <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-icon">🤖</span>
+      <span>AI智能伴侣</span>
+    </div>
+
     <h3>伴侣信息</h3>
     <div class="field">
       <label for="nickname">昵称</label>
@@ -35,6 +37,46 @@
 
   <!-- 聊天区 -->
   <section class="chat">
+    <!-- 顶栏：右上角设置 -->
+    <div class="chat-topbar">
+      <div class="settings">
+        <button class="settings-btn" id="settingsBtn" aria-haspopup="true" aria-expanded="false">⚙️ Settings</button>
+
+        <div class="settings-panel" id="settingsPanel" hidden>
+          <!-- About -->
+          <div class="settings-section">
+            <h4>About</h4>
+            <p class="about-text">
+              这是一个 Streamlit 入门网页（虽然不是 Streamlit 写的，是 D 老师用纯 HTML + CSS + JavaScript 写的 😎）
+            </p>
+          </div>
+
+          <!-- 主题色切换 -->
+          <div class="settings-section">
+            <h4>Theme</h4>
+            <div class="theme-options" id="themeOptions">
+              <button class="theme-option" data-theme-value="system">
+                System<span class="theme-label-sub">跟随系统</span>
+              </button>
+              <button class="theme-option" data-theme-value="light">
+                Light<span class="theme-label-sub">浅色</span>
+              </button>
+              <button class="theme-option" data-theme-value="black">
+                Black<span class="theme-label-sub">深色</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 反馈 -->
+          <div class="settings-section">
+            <h4>Feedback</h4>
+            <button class="st-btn" id="bugBtn">🐞 Report a Bug</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 消息列表 -->
     <div id="messages">
       <div class="messages-inner">
         <div class="empty" id="emptyState">
@@ -44,6 +86,8 @@
         </div>
       </div>
     </div>
+
+    <!-- 输入区 -->
     <div class="input-wrap">
       <div class="input-box">
         <textarea id="input" rows="1" placeholder="按 Enter 发送，Shift + Enter 换行"></textarea>
@@ -68,8 +112,7 @@
 
 <footer>
   AI智能伴侣 · Powered by <a href="https://platform.deepseek.com" target="_blank" rel="noopener">DeepSeek</a> ·
-  <a href="https://bilibili.com" target="_blank" rel="noopener">Get Help</a> ·
-  <a href="#" id="bugBtn" title="通过邮件反馈问题">Report a Bug</a>
+  <a href="https://bilibili.com" target="_blank" rel="noopener">Get Help</a>
 </footer>
 
 <script src="js/app.js"></script>

@@ -247,6 +247,54 @@
     localStorage.setItem('companion_api_key', keyEl.value.trim());
   });
 
+  /* ========== 设置面板（右上角） ========== */
+  var settingsBtn = $('settingsBtn');
+  var settingsPanel = $('settingsPanel');
+  var themeOptions = $('themeOptions');
+
+  function closeSettings() {
+    settingsPanel.hidden = true;
+    settingsBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  /* 高亮当前主题选项 */
+  function syncThemeButtons() {
+    var current = window.CompanionTheme ? window.CompanionTheme.get() : 'system';
+    var buttons = themeOptions.querySelectorAll('.theme-option');
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].classList.toggle('active', buttons[i].getAttribute('data-theme-value') === current);
+    }
+  }
+
+  settingsBtn.addEventListener('click', function (e) {
+    e.stopPropagation(); // 避免冒泡到 document 触发关闭
+    var willOpen = settingsPanel.hidden;
+    settingsPanel.hidden = !willOpen;
+    settingsBtn.setAttribute('aria-expanded', String(willOpen));
+  });
+
+  settingsPanel.addEventListener('click', function (e) {
+    e.stopPropagation(); // 点击面板内部不关闭面板
+  });
+
+  document.addEventListener('click', closeSettings);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      closeSettings();
+      bugModal.hidden = true;
+    }
+  });
+
+  /* 主题切换：system / light / black */
+  themeOptions.addEventListener('click', function (e) {
+    var btn = e.target.closest ? e.target.closest('.theme-option') : null;
+    if (!btn) return;
+    if (window.CompanionTheme) window.CompanionTheme.set(btn.getAttribute('data-theme-value'));
+    syncThemeButtons();
+  });
+
+  if (window.CompanionTheme) window.CompanionTheme.onChange(syncThemeButtons);
+
   /* ========== Bug 反馈（mailto 邮件） ========== */
   var BUG_EMAIL = '991895176@qq.com';
   var bugModal = $('bugModal');
@@ -254,6 +302,7 @@
 
   $('bugBtn').addEventListener('click', function (e) {
     e.preventDefault();
+    closeSettings();
     bugText.value = '';
     bugModal.hidden = false;
     bugText.focus();
@@ -280,6 +329,7 @@
   });
 
   /* ========== 初始化 ========== */
+  syncThemeButtons();
   load();
   renderAll();
 })();

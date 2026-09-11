@@ -4,11 +4,13 @@
 
 ## ✨ 功能
 
-- 🤖 仿 Streamlit 简约 UI，标题「AI智能伴侣」
+- 🤖 仿 Streamlit 简约 UI：标题置于侧边栏顶部，主体区域留给聊天
 - 🎭 侧边栏自定义伴侣「昵称」与「性格」，System Prompt 动态拼接
 - 💬 流式逐字输出（SSE），Markdown 渲染（代码块 / 加粗 / 链接等）
 - 💾 聊天记录 localStorage 持久化，刷新不丢失
 - 🔑 API Key 由用户自行输入，仅存于本地浏览器
+- ⚙️ 右上角 Settings：About / 主题切换（System · Light · Black）/ Report a Bug
+- 🎨 三套主题基于 CSS 变量实现，选择结果持久化，System 模式自动跟随系统深浅色
 - 🐞 「Report a Bug」弹窗 → mailto 邮件反馈
 
 ## 📁 项目结构
@@ -17,9 +19,10 @@
 .
 ├── index.html       # 页面结构（HTML）
 ├── css/
-│   └── style.css    # 全部样式（仿 Streamlit 风格）
+│   └── style.css    # 全部样式 + 主题变量（浅色 / Black）
 ├── js/
-│   └── app.js       # 全部逻辑（聊天 / API 流式 / 渲染 / 邮件反馈）
+│   ├── theme.js     # 主题引导（head 中同步加载，防深色闪白）
+│   └── app.js       # 主逻辑（聊天 / API 流式 / 渲染 / 设置面板 / 邮件反馈）
 └── README.md
 ```
 
