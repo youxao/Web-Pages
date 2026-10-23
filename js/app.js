@@ -8,10 +8,10 @@
   'use strict';
 
   /* ---------- 常量配置 ---------- */
-  var API_URL = 'https://api.deepseek.com/chat/completions'; // DeepSeek 兼容 OpenAI 接口，浏览器可跨域直连
+  var API_URL = 'https://api.tanghong.xin/chat/completions'; // 自建 Cloudflare Worker 代理（API Key 存在服务端，前端不可见）
   var MODEL = 'deepseek-v4-flash';
   var STORE_KEY = 'companion_chat_v1';
-  var MAX_SEND = 20; // 每次发送给 API 的最大历史消息条数（防止上下文超长）
+  var MAX_ROUNDS = 20; // 对话轮次上限：最多保留 20 轮问答（40 条消息）
 
   /* ---------- DOM 引用 ---------- */
   function $(id) { return document.getElementById(id); }
@@ -23,7 +23,6 @@
   var clearBtn = $('clearBtn');
   var nickEl = $('nickname');
   var natureEl = $('nature');
-  var keyEl = $('apiKey');
 
   /* ---------- 状态 ---------- */
   var history = [];   // 聊天记录（localStorage 持久化）
@@ -38,11 +37,17 @@
     } catch (e) { history = []; }
     nickEl.value = localStorage.getItem('companion_nickname') || '';
     natureEl.value = localStorage.getItem('companion_nature') || '';
-    keyEl.value = localStorage.getItem('companion_api_key') || '';
   }
 
   function saveHistory() {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(history)); } catch (e) {}
+  }
+
+  /* 裁剪对话历史：最多保留 MAX_ROUNDS 轮，且保证以 user 消息开头 */
+  function trimHistory() {
+    var limit = MAX_ROUNDS * 2;
+    while (history.length > limit) history.shift();
+    while (history.length && history[0].role !== 'user') history.shift();
   }
 
   function scrollBottom() { messagesEl.scrollTop = messagesEl.scrollHeight; }
@@ -114,8 +119,7 @@
     var resp = await fetch(API_URL, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + keyEl.value.trim()
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({ model: MODEL, messages: messages, stream: true })
     });
@@ -125,7 +129,7 @@
         var err = await resp.json();
         if (err && err.error && err.error.message) msg = err.error.message;
       } catch (e) {}
-      if (resp.status === 401) msg = 'API Key 无效或已过期，请检查左侧的 Key';
+      if (resp.status === 401) msg = '内置 API Key 无效或已过期';
       if (resp.status === 429) msg = '请求过于频繁，触发了限流，请稍后再试';
       throw new Error(msg);
     }
@@ -158,11 +162,8 @@
   async function send() {
     var text = inputEl.value.trim();
     if (!text || streaming) return;
-    var key = keyEl.value.trim();
-    if (!key) {
-      appendMessageDom('error', '请先在左侧输入你的 DeepSeek API Key ～');
-      return;
-    }
+
+    trimHistory(); // 确保上下文不超过 20 轮
 
     // 用户消息入列并渲染
     history.push({ role: 'user', content: text });
@@ -180,7 +181,7 @@
 
     try {
       var sys = buildSystemPrompt();
-      var msgs = [{ role: 'system', content: sys }].concat(history.slice(-MAX_SEND));
+      var msgs = [{ role: 'system', content: sys }].concat(history);
       await streamChat(msgs, function (delta) {
         fullResponse += delta;
         if (!assistantWrap) {
@@ -198,6 +199,7 @@
         assistantWrap = appendMessageDom('assistant', fullResponse);
       }
       history.push({ role: 'assistant', content: fullResponse });
+      trimHistory();
       saveHistory();
     } catch (err) {
       typingWrap.remove();

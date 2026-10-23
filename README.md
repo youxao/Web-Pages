@@ -8,7 +8,9 @@
 - 🎭 侧边栏自定义伴侣「昵称」与「性格」，System Prompt 动态拼接
 - 💬 流式逐字输出（SSE），Markdown 渲染（代码块 / 加粗 / 链接等）
 - 💾 聊天记录 localStorage 持久化，刷新不丢失
-- 🔑 API Key 由用户自行输入，仅存于本地浏览器
+- 🔑 API Key 存于 Cloudflare Worker 的 Secret 环境变量中，前端源码不含任何 key，用户无需填写
+- 🛡️ 自建 Cloudflare Worker 代理（`api.tanghong.xin`），负责注入 Key、CORS 白名单与流式透传
+- 🧠 对话轮次上限 20 轮（上下文与本地记录均只保留最近 20 轮）
 - ⚙️ 右上角 Settings：About / 主题切换（System · Light · Black）/ Report a Bug
 - 🎨 三套主题基于 CSS 变量实现，选择结果持久化，System 模式自动跟随系统深浅色
 - 🐞 「Report a Bug」弹窗 → mailto 邮件反馈
@@ -45,5 +47,19 @@ python -m http.server 8080
 ## ⚙️ 配置
 
 - 模型：`deepseek-v4-flash`（`js/app.js` 中 `MODEL` 常量）
-- API 地址：`https://api.deepseek.com/chat/completions`（浏览器跨域直连）
+- API Key：存于 Cloudflare Worker 的 Secret（`DEEPSEEK_API_KEY`），前端不含 key
+- 对话轮次上限：`js/app.js` 中 `MAX_ROUNDS` 常量（默认 20）
+- API 地址：`https://api.tanghong.xin/chat/completions`（自建 Cloudflare Worker 代理）
 - Bug 反馈邮箱：`js/app.js` 中 `BUG_EMAIL` 常量
+
+## ☁️ Cloudflare Worker 代理
+
+前端不直接连接 DeepSeek，而是经过自建 Worker（`cloudflare-worker/` 目录）：
+
+```
+浏览器 → https://api.tanghong.xin → Cloudflare Worker → api.deepseek.com
+```
+
+- Key 只存在 Worker 的 Secret 环境变量里，公开的源码/仓库中永远看不到
+- Worker 内置 CORS 白名单（仅 `tanghong.xin` / `www.tanghong.xin` / 本地调试地址可调用）
+- 流式 SSE 原样透传，前端体验不变
