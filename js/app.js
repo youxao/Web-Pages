@@ -245,9 +245,6 @@
   natureEl.addEventListener('change', function () {
     localStorage.setItem('companion_nature', natureEl.value.trim());
   });
-  keyEl.addEventListener('input', function () {
-    localStorage.setItem('companion_api_key', keyEl.value.trim());
-  });
 
   /* ========== 设置面板（右上角） ========== */
   var settingsBtn = $('settingsBtn');
